@@ -20,13 +20,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
           pip install tox
-      - name: Run tox
+      - name: Run tox 3.8
         if: matrix.python-ver == 3.8
         run: |
           tox -e py38
+      - name: Run tox 3.7
         if: matrix.python-ver == 3.7
         run: |
           tox -e py37
+      - name: Run tox 3.6
         if: matrix.python-ver == 3.6
         run: |
           tox -e py36

@@ -1,0 +1,57 @@
+on: push
+
+jobs:
+  test:
+    strategy:
+      fail-fast: False
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-ver: [3.6, 3.7, 3.8]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-ver }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          pip install tox
+      - name: Run tox
+        run: |
+          tox
+      - name: Coverage
+        run: |
+          coverage erase
+          coverage run -a --source ./torchio -m pytest
+          coverage report -m
+      - name: Lint
+        run: |
+          pylint --rcfile=tests/pylintrc torchio
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@master
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: python -m pip install wheel twine setuptools
+
+      - name: Build wheel
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Publish package if tagged release
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: fepegar
+          password: bzRlABBi08Z4wi6uEBYs7waX45aQEuhIWNKnsOEW93Kltyh7cnIpTj8Th+XaafeNtcb7gUrmJiJGgKwITaO4KcxKRbUYTW1TX9gVRmRlnFtdOu/GRS8q69gpdFwTdBptXAwhPFsnX+CslO3RTgGIhGAipsIDYGQnuweD666PsdCBjsOclLG1H0BmgGaMGfA5dK5HiRlU2v5YkWnK5sCSYwQ0lFAESpnakUKf0kJkAnF0lCGsuX1OrlKscf03p20nT2ESkiDWbDMIsq1h2wQlT3HjHqT6OVJDhR82pNHadYjbBirwYaW/LW03uUyhIrL2u63DkvHGr1sV6XrqNdMg55lBTUFpPrdAVm6mb9zLz9+lQT+8ATct3rgp9TboqN4/6yMs4OBQfL+V38G5IEpE1oJzoucTElM8nOujyNVQoIfpGKZHrD20eDcHCBzILfkQ9mxSEleuiJyPlnjWO55IDQaep/HSkCTMttf8tMjU2sflMHIeeGnt6mY6LOQ5MTwH21/sg3pkZUqm9n7BT5U7r45hsPxI2b75/7Br2/mANBSgDBtz3M4tWnAniHnMwLPaw05exBezMTkzZqZVw2O5VJn4x3LJ6L5Q2MkAa0qI3fO+kh7GWqEY9fAm6gr0rV+1GdiS/tI9t9qr4VswJUTwTuXgg3wAO1jZ28QcnLO5dds=

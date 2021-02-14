@@ -20,18 +20,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
           pip install tox
-      - name: Run tox 3.8
-        if: matrix.python-ver == 3.8
+      - name: Run tox
         run: |
-          tox -e py38
-      - name: Run tox 3.7
-        if: matrix.python-ver == 3.7
-        run: |
-          tox -e py37
-      - name: Run tox 3.6
-        if: matrix.python-ver == 3.6
-        run: |
-          tox -e py36
+          tox
       - name: Coverage
         run: |
           coverage erase
@@ -40,7 +31,10 @@ jobs:
       - name: Lint
         run: |
           pylint --rcfile=tests/pylintrc torchio
-          tox -e lint
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     runs-on: ubuntu-latest

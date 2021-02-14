@@ -21,8 +21,15 @@ jobs:
           python -m pip install -r requirements-dev.txt
           pip install tox
       - name: Run tox
-        run: |
-          tox
+        if: matrix.python-ver == 3.8
+          run: |
+            tox -e py38
+        if: matrix.python-ver == 3.7
+          run: |
+            tox -e py37
+        if: matrix.python-ver == 3.6
+          run: |
+            tox -e py36
       - name: Coverage
         run: |
           coverage erase
@@ -31,6 +38,7 @@ jobs:
       - name: Lint
         run: |
           pylint --rcfile=tests/pylintrc torchio
+          tox -e lint
 
   deploy:
     runs-on: ubuntu-latest
